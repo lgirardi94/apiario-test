@@ -18,70 +18,70 @@ const store = new Store();
 document.getElementById('logData').value = today();
 
 /* NAV */
-document.querySelector('nav').onclick = e=>{
-  if(!e.target.dataset.section) return;
-  document.querySelectorAll('section').forEach(s=>s.style.display='none');
-  document.getElementById(e.target.dataset.section).style.display='block';
+document.querySelector('.nav').onclick = e => {
+  if (!e.target.dataset.section) return;
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(e.target.dataset.section).classList.add('active');
 };
 
 /* ARNIE */
-document.getElementById('addArnia').onclick = ()=>{
+document.getElementById('addArnia').onclick = () => {
   const nome = document.getElementById('arniaNome').value;
-  if(!nome) return;
+  if (!nome) return;
   addArnia(store, nome);
-  updateAll();
+  update();
 };
 
 /* LOG */
-document.getElementById('saveLog').onclick = ()=>{
+document.getElementById('saveLog').onclick = () => {
   addLog(store,{
     data: document.getElementById('logData').value,
     note: document.getElementById('logNote').value,
     arniaId: document.getElementById('logArnia').value
   });
-  updateAll();
+  update();
 };
 
 /* MAGAZZINO */
-document.getElementById('addArticolo').onclick = ()=>{
+document.getElementById('addArticolo').onclick = () => {
   addArticolo(
     store,
     document.getElementById('artNome').value,
     document.getElementById('artUnita').value
   );
-  updateAll();
+  update();
 };
 
 /* MODALE */
 let currentArt = null;
 
-document.addEventListener('click', e=>{
-  if(e.target.dataset.mov){
+document.addEventListener('click', e => {
+  if (e.target.dataset.mov) {
     currentArt = e.target.dataset.mov;
     document.getElementById('modal').classList.remove('hidden');
   }
 });
 
-document.getElementById('confirmMov').onclick = ()=>{
+document.getElementById('confirmMov').onclick = () => {
   addMovimento(store,{
     articoloId: currentArt,
     tipo: document.getElementById('movTipo').value,
     qta: parseFloat(document.getElementById('movQta').value)
   });
   document.getElementById('modal').classList.add('hidden');
-  updateAll();
+  update();
 };
 
-document.getElementById('closeModal').onclick = ()=>{
+document.getElementById('closeModal').onclick = () => {
   document.getElementById('modal').classList.add('hidden');
 };
 
 /* UPDATE */
-function updateAll(){
+function update(){
   const arnie = getArnie(store);
   renderArnie(arnie);
   renderArniaSelect(arnie);
-
   renderLogs(getLogs(store), arnie);
 
   const mag = getMagazzino(store);
@@ -89,4 +89,4 @@ function updateAll(){
   renderMovimenti(getMovimenti(store), mag);
 }
 
-updateAll();
+update();
