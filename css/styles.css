@@ -1,18 +1,61 @@
 body {
-  font-family: sans-serif;
+  font-family: Arial;
   background: #fbf5e6;
+  margin: 0;
+}
+
+.header {
+  background: #f4b400;
+  padding: 15px;
+  text-align: center;
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.container {
   padding: 20px;
 }
 
-button {
-  margin: 5px;
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  gap: 10px;
 }
 
 .card {
   background: white;
   padding: 10px;
-  margin: 5px 0;
+  border-radius: 8px;
   border: 1px solid #ddd;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.badge {
+  background: #f4b400;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .modal {
@@ -27,6 +70,8 @@ button {
 .modal-box {
   background:white;
   padding:20px;
+  border-radius:10px;
+  width:300px;
 }
 
 .hidden {
