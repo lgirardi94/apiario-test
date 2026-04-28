@@ -1920,7 +1920,8 @@ function showSciroppoTab(tab, btn) {
     if(el) el.style.display = 'none';
   });
   document.querySelectorAll('#utilTabSciroppo .mag-tabs .mag-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById(`sciTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = 'block';
+  const target = document.getElementById(`sciTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
+  if(target) target.style.display = 'block';
   btn.classList.add('active');
   if(tab === 'calcolatore') sciCalc();
 }
