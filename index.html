@@ -79,12 +79,18 @@
 
     <!-- VISITE + OBIETTIVI -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem">
-      <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Ultime visite</div>
+       <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem;display:flex;justify-content:space-between;align-items:center">
+          Ultime visite
+          <span onclick="navigateTo('registro')" style="font-size:0.75rem;color:var(--amber);cursor:pointer;font-weight:600;letter-spacing:0;text-transform:none">Vai al registro ↗</span>
+        </div>
         <div id="homeUltimeVisite"></div>
       </div>
       <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Obiettivi in corso</div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem;display:flex;justify-content:space-between;align-items:center">
+          Obiettivi in corso
+          <span onclick="navigateTo('obiettivi')" style="font-size:0.75rem;color:var(--amber);cursor:pointer;font-weight:600;letter-spacing:0;text-transform:none">Vai agli obiettivi ↗</span>
+        </div>
         <div id="homeObiettivi"></div>
       </div>
     </div>
@@ -92,11 +98,11 @@
     <!-- GRAFICI -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem" id="homeGraficiGrid">
       <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Miele per anno (kg)</div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Miele prodotto per anno (kg)</div>
         <div id="homeGraficoMiele"></div>
       </div>
       <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Arnie per anno</div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Arnie attive per anno</div>
         <div id="homeGraficoArnie"></div>
       </div>
       <div class="card" style="padding:1rem">
