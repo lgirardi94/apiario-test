@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Mio Apiario</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐝</text></svg>">
+<link rel="stylesheet" href="style-main.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="shared.js"></script>
+</head>
+<body>
+
+<!-- LOGIN GATE - app non accessibile finché non si fa login Google -->
+<div id="loginGate" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;gap:1.5rem;background:linear-gradient(135deg, var(--cream) 0%, var(--amber-pale) 100%)">
+  <div style="font-size:5rem">🐝</div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--brown);letter-spacing:1px">Il Mio Apiario</h1>
+  <p style="color:var(--text-light);font-size:1rem;line-height:1.5;max-width:480px">Per accedere all'app è necessario connettere il tuo account Google.<br>I tuoi dati saranno salvati su Google Drive in una cartella privata e accessibile solo da te.</p>
+  <button onclick="driveLogin()" style="background:white;border:1.5px solid #ddd;border-radius:8px;padding:0.85rem 1.8rem;font-family:'Crimson Pro',serif;font-size:1rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:0.6rem;box-shadow:0 4px 16px rgba(0,0,0,0.08);color:#333">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    Accedi con Google
+  </button>
+  <p id="loginGateStatus" style="color:var(--text-light);font-size:0.85rem;font-style:italic;margin-top:0.5rem">⏳ Caricamento Google...</p>
+</div>
+
+<!-- APP CONTENT - inizialmente nascosto -->
+<div id="appContent" style="display:none">
+
+<header>
+  <span class="header-bee">🐝</span>
+  <h1>Il Mio Apiario</h1>
+  <p>Calendario dei lavori & Registro visite</p>
+</header>
+
+<nav>
+  <button class="active" onclick="showSection('home')">🏡 Home</button>
+  <button onclick="showSection('utility')">📚 Utility</button>
+  <button onclick="showSection('arnie')">🏠 Le Mie Arnie</button>
+  <button onclick="showSection('registro')">📖 Registro Visite</button>
+  <button onclick="showSection('obiettivi')">🎯 Obiettivi</button>
+  <button onclick="showSection('magazzino')">📦 Magazzino</button>
+  <button onclick="showSection('contabilita')">💰 Contabilità</button>
+</nav>
+
+<!-- BACKUP BAR -->
+<div id="backupBar" style="background:var(--dark);border-bottom:1px solid rgba(200,134,10,0.3);padding:0.55rem 1.2rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;justify-content:space-between;position:relative;z-index:99">
+  <div style="display:flex;align-items:center;gap:0.8rem">
+    <span id="driveStatus" style="color:rgba(100,220,100,0.8);font-size:0.82rem;font-style:italic;font-family:'Crimson Pro',serif">☁️ Sincronizzato con Google Drive</span>
+    <button id="btnDriveLogin" onclick="driveLogin()" style="display:none">Accedi</button>
+    <button id="btnDriveLogout" onclick="driveLogoutApp()" style="background:transparent;border:1px solid rgba(200,134,10,0.4);color:rgba(251,245,230,0.6);padding:0.25rem 0.7rem;border-radius:2px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:0.78rem">Disconnetti</button>
+  </div>
+  <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center">
+    <button onclick="exportJSON()" style="background:transparent;border:1px solid rgba(200,134,10,0.3);color:rgba(245,200,66,0.6);padding:0.3rem 0.9rem;border-radius:2px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:0.82rem" onmouseover="this.style.background='rgba(200,134,10,0.15)'" onmouseout="this.style.background='transparent'">⬇ Backup locale</button>
+    <label style="background:transparent;border:1px solid rgba(200,134,10,0.3);color:rgba(245,200,66,0.6);padding:0.3rem 0.9rem;border-radius:2px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:0.82rem" onmouseover="this.style.background='rgba(200,134,10,0.15)'" onmouseout="this.style.background='transparent'">
+      ⬆ Importa JSON
+      <input type="file" accept=".json" onchange="importJSON(event)" style="display:none">
+    </label>
+  </div>
+</div>
+
+<main>
+
+  <!-- ===== HOME ===== -->
+  <section class="section active" id="home">
+
+    <!-- BANNER STAGIONALE -->
+    <div id="homeBanner" onclick="navigateTo('utility')" style="cursor:pointer;background:linear-gradient(135deg,#1A1208,#5C3A10);border-radius:6px;padding:1.2rem 1.5rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;border:1px solid rgba(200,134,10,0.3);transition:opacity 0.2s" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <div>
+        <div style="font-size:0.72rem;color:#A8C4B0;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.3rem" id="homeSeasonLabel">Stagione attiva</div>
+        <div style="font-size:1.6rem;font-family:'Playfair Display',serif;color:#F5C842;margin-bottom:0.2rem" id="homeSeasonName">—</div>
+        <div style="font-size:0.85rem;color:#c8a87a" id="homeSeasonSub">—</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:0.88rem;color:#A8C4B0" id="homeDate">—</div>
+        <div style="font-size:0.72rem;color:#7a9a85;margin-top:0.2rem">↗ Vai al calendario</div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="homeAlerts" style="margin-bottom:1rem"></div>
+
+    <!-- KPI -->
+    <div class="stats-grid" id="homeKpi" style="margin-bottom:1.2rem"></div>
+
+    <!-- ARNIE -->
+    <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.6rem">Stato arnie — ultima ispezione</div>
+    <div class="arnie-grid" id="homeArnieGrid" style="margin-bottom:1.2rem"></div>
+
+    <!-- VISITE + OBIETTIVI -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem">
+      <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Ultime visite</div>
+        <div id="homeUltimeVisite"></div>
+      </div>
+      <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Obiettivi in corso</div>
+        <div id="homeObiettivi"></div>
+      </div>
+    </div>
+
+    <!-- GRAFICI -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem" id="homeGraficiGrid">
+      <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Miele per anno (kg)</div>
+        <div id="homeGraficoMiele"></div>
+      </div>
+      <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Arnie per anno</div>
+        <div id="homeGraficoArnie"></div>
+      </div>
+      <div class="card" style="padding:1rem">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Contabilità per anno</div>
+        <div id="homeGraficoContabilita"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== UTILITY ===== -->
+  <section class="section" id="utility">
+    <h2 class="section-title">Utility</h2>
+    <p class="section-subtitle">Strumenti di supporto per la gestione dell'apiario</p>
+
+    <div class="mag-tabs" style="margin-bottom:2rem">
+      <button class="mag-tab active" id="utilTabBtnCalendario" data-tab="calendario" onclick="showUtilTab('calendario', this)">📅 Calendario Lavori</button>
+      <button class="mag-tab" id="utilTabBtnSciroppo" data-tab="sciroppo" onclick="showUtilTab('sciroppo', this)">🍬 Sciroppo</button>
+      <button class="mag-tab" id="utilTabBtnTrattamenti" data-tab="trattamenti" onclick="showUtilTab('trattamenti', this)">💊 Trattamenti</button>
+    </div>
+
+    <!-- SUB: CALENDARIO -->
+    <div id="utilTabCalendario">
+      <p class="section-subtitle" style="margin-top:-1rem">Guida completa alle attività stagionali nell'apiario</p>
+
+    <!-- PRIMAVERA -->
+    <div class="season-header">
+      <span class="season-icon">🌿</span>
+      <h2>Primavera</h2>
+      <span class="season-badge">Marzo – Maggio</span>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌱</span><h3>Marzo — Ripresa primaverile</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Primo controllo sanitario dopo l'inverno: presenza della regina, scorte di miele e polline</li>
+        <li>Valutazione delle perdite invernali</li>
+        <li>Sostituzione degli alveari morti o debolissimi</li>
+        <li class="task-highlight">Trattamento antivarroa se non fatto in autunno (acido ossalico in assenza di covata)</li>
+        <li>Pulizia del fondo dell'alveare: morti, detriti</li>
+        <li>Sostituzione dei fondi sporchi o danneggiati</li>
+        <li>Verifica telaini: eliminare quelli anneriti e vecchi (oltre 3-4 anni)</li>
+        <li class="task-highlight">Nutrizione stimolante se scorte scarse: sciroppo 1:1 o candito</li>
+        <li>Controllo delle tarme della cera nei magazzini</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌸</span><h3>Aprile — Sviluppo della famiglia</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li>Controlli periodici ogni 7-10 giorni</li>
+        <li>Verifica della deposizione della regina (schema regolare e compatto)</li>
+        <li>Valutazione della popolazione: aggiungere spazio se necessario</li>
+        <li class="task-highlight">Inserimento del primo melario quando 8-9 telaini sono coperti di api</li>
+        <li class="task-highlight">Inizio controllo della sciamatura: verifica celle reali</li>
+        <li>Sostituzione di regine vecchie o poco prolifiche</li>
+        <li>Unione di famiglie deboli</li>
+        <li>Aggiornamento del registro di apiario (obbligatorio per legge in Italia)</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌺</span><h3>Maggio — Piena produzione (acacia)</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Controllo anti-sciamatura ogni 5-7 giorni</li>
+        <li>Aggiunta di melari se il primo è quasi pieno</li>
+        <li>Inserimento di telaini con foglio cereo nei melari</li>
+        <li class="task-highlight">Raccolta miele di acacia quando i favi sono opercolati per almeno ⅔</li>
+        <li>Smielatura del miele di acacia (tempi stretti: fioritura breve)</li>
+        <li>Nucleazioni artificiali per prevenire la sciamatura</li>
+      </ul></div>
+    </div>
+
+    <!-- ESTATE -->
+    <div class="season-header"><span class="season-icon">☀️</span><h2>Estate</h2><span class="season-badge">Giugno – Agosto</span></div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌻</span><h3>Giugno — Post-acacia e millefiori</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li>Rimozione dei melari vuoti dopo l'acacia</li>
+        <li>Smielatura del millefiori se presente</li>
+        <li class="task-highlight">Controllo varroa con conta delle cadute naturali (striscia collante)</li>
+        <li>Se infestazione elevata: trattamento estivo con acido ossalico o formico</li>
+        <li>Verifica stato delle regine: sostituzione di quelle con 2 anni di età</li>
+        <li class="task-highlight">Allevamento regine (periodo ideale: maggio-giugno)</li>
+        <li>Produzione di nuclei per rimonta o vendita</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🔆</span><h3>Luglio — Periodo critico</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Garantire ombra e ventilazione agli alveari (caldo intenso)</li>
+        <li>Disponibilità di acqua nelle vicinanze dell'apiario</li>
+        <li class="task-highlight">Rischio saccheggio: ridurre le entrate nelle famiglie deboli</li>
+        <li>Controllo della varroa</li>
+        <li>Famiglie in diminuzione: normale riduzione della covata estiva</li>
+        <li>Evitare aperture inutili nelle ore calde (&gt;30°C)</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🍯</span><h3>Agosto — Preparazione all'autunno</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Trattamento antivarroa estivo (fondamentale per proteggere le api invernali)</li>
+        <li>Acido ossalico sublimato (più efficace)</li>
+        <li>Acido formico se temperature tra 15-30°C</li>
+        <li>Strips a base di amitraz o timolo</li>
+        <li>Verifica scorte: le famiglie non devono avere meno di 10-12 kg di miele</li>
+        <li>Sostituzione delle regine vecchie prima della fine dell'estate</li>
+        <li>Raccolta miele di sulla, girasole, millefiori estivo se presenti flussi</li>
+      </ul></div>
+    </div>
+
+    <!-- AUTUNNO -->
+    <div class="season-header"><span class="season-icon">🍂</span><h2>Autunno</h2><span class="season-badge">Settembre – Novembre</span></div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🍁</span><h3>Settembre — Consolidamento</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Ultimo controllo completo prima dell'inverno</li>
+        <li>Verifica presenza e qualità della regina</li>
+        <li>Valutazione della quantità di api e covata</li>
+        <li class="task-highlight">Nutrizione autunnale: sciroppo 2:1 in grandi quantità o candito</li>
+        <li>Unione delle famiglie deboli (tecnica del foglio di giornale)</li>
+        <li>Riduzione delle entrate con riduci-entrata per limitare il saccheggio</li>
+        <li class="task-highlight">Trattamento antivarroa con acido ossalico in assenza di covata</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌫️</span><h3>Ottobre — Pre-invernamento</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li>Completamento della nutrizione autunnale</li>
+        <li class="task-highlight">Trattamento antivarroa con acido ossalico (con covata ridotta al minimo)</li>
+        <li>Verifica dell'umidità interna: ventilazione adeguata contro la condensa</li>
+        <li>Sistemazione delle protezioni invernali (zone fredde)</li>
+        <li>Riduzione dell'entrata a 1-2 cm</li>
+        <li>Rimozione dei melari vuoti e loro pulizia</li>
+        <li class="task-highlight">Magazzinaggio melari: pulizia, trattamento anti-tarma, stoccaggio asciutto</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>❄️</span><h3>Novembre — Invernamento</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Ultimo trattamento antivarroa con acido ossalico gocciolato (glomere formato, assenza covata)</li>
+        <li>Posizionamento protezioni contro vento e umidità</li>
+        <li>Controllo visivo esterno (non aprire)</li>
+        <li>Assicurare stabilità degli alveari (vento, neve)</li>
+        <li>Pulizia e manutenzione delle attrezzature in officina</li>
+      </ul></div>
+    </div>
+
+    <!-- INVERNO -->
+    <div class="season-header"><span class="season-icon">🌨️</span><h2>Inverno</h2><span class="season-badge">Dicembre – Febbraio</span></div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌙</span><h3>Dicembre – Gennaio — Riposo invernale</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Nessuna apertura: il glomere non deve essere disturbato</li>
+        <li>Controllo esterno: presenza di volo nelle giornate miti (&gt;10°C)</li>
+        <li>Ascolto rumori normali battendo sull'alveare</li>
+        <li>Protezione da picchi, cinciallegre e predatori (reti o riduci-entrata)</li>
+        <li class="task-highlight">Controllo del peso (bilance apistiche o sollevamento posteriore)</li>
+        <li>Se scorte scarse: somministrazione di candito senza aprire l'alveare</li>
+      </ul></div>
+    </div>
+    <div class="month-card">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🌤️</span><h3>Febbraio — Pre-ripresa</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li>Nelle giornate miti: primo controllo rapido di scorte e glomere</li>
+        <li>Trattamento con acido ossalico gocciolato se non fatto in autunno</li>
+        <li class="task-highlight">Inizio preparazione attrezzature per la stagione</li>
+        <li>Fusione cera vecchia e costruzione/acquisto nuovi fogli cerei</li>
+        <li>Manutenzione e verniciatura delle arnie</li>
+        <li>Ordine del materiale: fogli cerei, farmaci, telaini, ecc.</li>
+      </ul></div>
+    </div>
+
+    <!-- TUTTO L'ANNO -->
+    <div class="season-header"><span class="season-icon">📋</span><h2>Tutto l'anno</h2><span class="season-badge">Lavori trasversali</span></div>
+    <div class="month-card" style="border-left-color: var(--brown)">
+      <div class="month-card-header" onclick="toggleCard(this)"><span>🗂️</span><h3>Attività continue</h3><span class="toggle-icon">▼</span></div>
+      <div class="month-card-body"><ul class="task-list">
+        <li class="task-highlight">Registro di apiario: aggiornamento dopo ogni visita (obbligatorio per legge in Italia)</li>
+        <li>Annotazione trattamenti veterinari con prescrizione medico-veterinaria</li>
+        <li>Controllo e manutenzione continua delle attrezzature (smoker, leva, tuta)</li>
+        <li>Analisi del miele: umidità con rifrattometro prima della smielatura (&lt;18%)</li>
+        <li>Formazione e aggiornamento continuo</li>
+      </ul></div>
+    </div>
+    </div><!-- fine utilTabCalendario -->
+
+    <!-- SUB: SCIROPPO -->
+    <div id="utilTabSciroppo" style="display:none">
+      <p class="section-subtitle" style="margin-top:-1rem">Ricetta completa con acido citrico · Calcolatore dosi</p>
+
+      <div class="mag-tabs">
+        <button class="mag-tab active" onclick="showSciroppoTab('calcolatore', this)">🧮 Calcolatore</button>
+        <button class="mag-tab" onclick="showSciroppoTab('procedimento', this)">📋 Procedimento</button>
+        <button class="mag-tab" onclick="showSciroppoTab('conservazione', this)">🧊 Conservazione</button>
+        <button class="mag-tab" onclick="showSciroppoTab('integratori', this)">🌿 Integratori</button>
+      </div>
+
+      <!-- TAB CALCOLATORE -->
+      <div id="sciTabCalcolatore">
+        <div class="sci-type-row">
+          <button class="sci-type-btn on-1to1" id="sci-btn-1to1" onclick="sciSetMode('1to1')">
+            <strong>1 : 1</strong><small>Primavera · stimolante</small>
+          </button>
+          <button class="sci-type-btn" id="sci-btn-2to1" onclick="sciSetMode('2to1')">
+            <strong>2 : 1</strong><small>Autunno · scorte invernali</small>
+          </button>
+        </div>
+        <div class="sci-calc-card">
+          <div class="sci-calc-card-accent" id="sciCalcAccent"></div>
+          <div class="sci-calc-card-body">
+          <div class="sci-calc-card-title">Calcolatore dosi</div>
+          <div class="sci-slider-row">
+            <label>Numero di alveari</label>
+            <input type="range" min="1" max="20" value="3" step="1" id="sci-sl-hives" oninput="sciCalc()">
+            <span class="sci-slider-val" id="sci-out-hives">3</span>
+          </div>
+          <div class="sci-slider-row">
+            <label>Litri per alveare</label>
+            <input type="range" min="0.5" max="5" value="1" step="0.5" id="sci-sl-liters" oninput="sciCalc()">
+            <span class="sci-slider-val" id="sci-out-liters">1.0 L</span>
+          </div>
+          <div class="sci-metrics">
+            <div class="sci-metric"><span class="sci-val" id="sci-r-acq">—</span><span class="sci-lbl">Acqua (L)</span></div>
+            <div class="sci-metric"><span class="sci-val" id="sci-r-zuc">—</span><span class="sci-lbl">Zucchero (kg)</span></div>
+            <div class="sci-metric"><span class="sci-val" id="sci-r-tot">—</span><span class="sci-lbl">Sciroppo totale (L)</span></div>
+          </div>
+          <div class="sci-acid-box">
+            <div class="sci-acid-title">Acido citrico · Dr. Oetker (bustine da 5 g)</div>
+            <div class="sci-acid-body">
+              Dose: 2 g per litro → <strong id="sci-r-grams">—</strong> g totali
+              <div class="sci-bustina-pill" id="sci-r-bust">—</div>
+              <div style="margin-top:6px;font-size:0.85rem;color:var(--green)" id="sci-r-resto"></div>
+            </div>
+          </div>
+          <div class="sci-metrics" style="margin-top:0.8rem;margin-bottom:0">
+            <div class="sci-metric"><span class="sci-val" id="sci-r-brix">—</span><span class="sci-lbl">Gradi Brix approx.</span></div>
+            <div class="sci-metric"><span class="sci-val">~4.5</span><span class="sci-lbl">pH con acido citrico</span></div>
+            <div class="sci-metric"><span class="sci-val"><span id="sci-r-uso" class="sci-uso-badge sci-uso-primavera">Primavera</span></span><span class="sci-lbl">Uso consigliato</span></div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB PROCEDIMENTO -->
+      <div id="sciTabProcedimento" style="display:none">
+        <div class="sci-steps">
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">1</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Misura l'acqua e scaldala a 60–70°C</h3>
+              <p>Usa acqua potabile di buona qualità. Non portare a ebollizione: 60–70°C è sufficiente per sciogliere lo zucchero senza degradarlo.</p>
+              <div class="sci-note sci-note-warn">Acqua molto dura o calcarea può essere sgradita alle api. Se necessario diluiscila con acqua minerale naturale o lasciala riposare 30 minuti in un contenitore aperto.</div>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">2</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Togli dal fuoco e aggiungi lo zucchero</h3>
+              <p>Versa lo zucchero semolato bianco nell'acqua calda fuori dal fuoco — mai il contrario. Mescola energicamente per 2–3 minuti finché lo sciroppo è completamente limpido.</p>
+              <div class="sci-note sci-note-err">Solo saccarosio bianco raffinato. Vietati: zucchero di canna grezzo, dolcificanti artificiali, miele di origine ignota o acquistato.</div>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num sci-step-green">3</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Lascia raffreddare sotto i 40°C — poi aggiungi l'acido citrico</h3>
+              <p>Aspetta che lo sciroppo sia tiepido prima di aggiungere il Dr. Oetker. Se aggiungi l'acido a sciroppo ancora caldo, parte dell'acido si volatilizza.</p>
+              <div class="sci-note sci-note-tip"><strong>Come usare le bustine Dr. Oetker da 5 g</strong><br>Ogni bustina contiene 5 g di acido citrico puro (E 330). A 2 g/litro, una bustina copre 2,5 litri di sciroppo.</div>
+              <div class="sci-note sci-note-tip" style="margin-top:8px"><strong>Senza bilancina?</strong><br>Una bustina intera (5 g) ogni 2,5 litri di sciroppo. Per piccole quantità, dividi visivamente la bustina a metà o in quarti.</div>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">4</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Mescola bene e verifica la dissoluzione</h3>
+              <p>L'acido citrico si scioglie quasi istantaneamente. Mescola 30 secondi. Lo sciroppo resterà limpido — nessun cambiamento di colore è normale e atteso.</p>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">5</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Raffredda completamente a temperatura ambiente</h3>
+              <p>Prima di versare nel nodrisco, lo sciroppo deve essere sotto i 25°C. Sciroppo caldo nel nodrisco uccide le api che vi cadono dentro e favorisce la fermentazione.</p>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">6</div><div class="sci-step-line"></div></div>
+            <div class="sci-step-body">
+              <h3>Somministra di sera nel nodrisco pulito</h3>
+              <p>Versare sempre al tramonto o di notte per evitare saccheggi. Pulire il nodrisco prima di ogni ricarica per rimuovere residui fermentati.</p>
+              <div class="sci-note sci-note-warn">Sigilla le fessure dell'alveare durante la nutrizione. Lo sciroppo esposto di giorno attira api di altri alveari e può scatenare saccheggi violenti.</div>
+            </div>
+          </div>
+          <div class="sci-step">
+            <div class="sci-step-left"><div class="sci-step-num">7</div></div>
+            <div class="sci-step-body">
+              <h3>Controlla il consumo dopo 48–72 ore</h3>
+              <p>Una colonia forte in primavera consuma 1 litro in 24–48h. Consumo lento indica colonia debole, temperature basse, o riserve già abbondanti.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONSERVAZIONE -->
+      <div id="sciTabConservazione" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem">
+          <div class="sci-conserv-card">
+            <div class="sci-c-label">Sciroppo 1:1</div>
+            <div class="sci-c-val">10–14 giorni</div>
+            <p>In frigorifero, contenitore chiuso, lontano dalla luce. L'acido citrico prolunga la durata rispetto allo sciroppo non acidificato.</p>
+          </div>
+          <div class="sci-conserv-card">
+            <div class="sci-c-label">Sciroppo 2:1</div>
+            <div class="sci-c-val">2–3 settimane</div>
+            <p>In frigorifero. La maggiore concentrazione di zucchero inibisce naturalmente la fermentazione. Agitare prima dell'uso.</p>
+          </div>
+        </div>
+        <div class="sci-note sci-note-err">Scartare immediatamente se: compare muffa, odore acetico (aceto), torbidità bianca o schiuma anomala.</div>
+      </div>
+
+      <!-- TAB INTEGRATORI -->
+      <div id="sciTabIntegratori" style="display:none">
+        <p style="color:var(--text-light);font-style:italic;margin-bottom:1rem;font-size:0.95rem">Da aggiungere solo a sciroppo freddo (sotto i 40°C), dopo l'acido citrico.</p>
+        <div class="sci-integr-list">
+          <div class="sci-integr-item">
+            <div class="sci-integr-dot green"></div>
+            <div><div class="sci-i-title">Timolo (cristalli)</div><p>Antisettico naturale contro Nosema e muffe. Utile soprattutto in autunno. Dose: 0,1 g/litro, sciogliere prima in poca grappa o alcool alimentare.</p></div>
+          </div>
+          <div class="sci-integr-item">
+            <div class="sci-integr-dot green"></div>
+            <div><div class="sci-i-title">Olio essenziale di timo o origano</div><p>Effetto prebiotico sul microbioma intestinale delle api. Dose: 1–2 gocce per litro. Non eccedere: in alte concentrazioni è repellente.</p></div>
+          </div>
+          <div class="sci-integr-item">
+            <div class="sci-integr-dot"></div>
+            <div><div class="sci-i-title">Integratori vitaminici apistici (Vita Feed Gold, Api-Herb)</div><p>Aminoacidi, vitamine del gruppo B, estratti vegetali. Seguire le dosi indicate sulla confezione. Utili in primavera per la stimolazione.</p></div>
+          </div>
+          <div class="sci-integr-item">
+            <div class="sci-integr-dot"></div>
+            <div><div class="sci-i-title">Miele della propria produzione</div><p>Un cucchiaio per litro rende lo sciroppo più appetibile. Usare solo miele certificato della propria produzione — mai miele acquistato (rischio AFB e malattie).</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- fine utilTabSciroppo -->
+
+    <!-- SUB: TRATTAMENTI -->
+    <div id="utilTabTrattamenti" style="display:none">
+      <p class="section-subtitle" style="margin-top:-1rem">Guida ai trattamenti antivarroa con i prodotti che usi</p>
+
+      <!-- DISCLAIMER -->
+      <div style="background:#fff8e7;border:1px solid #f5c842;border-left:4px solid #C8860A;border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.8rem;font-size:0.9rem;color:#6B4A20;line-height:1.5">
+        ⚠️ <strong>Disclaimer:</strong> Le informazioni qui riportate sono a scopo informativo e basate sulle linee guida del Ministero della Salute (IZS Venezie) e sui foglietti illustrativi dei prodotti. <strong>Consulta sempre il foglietto illustrativo</strong> del prodotto in tuo possesso e segui le indicazioni del veterinario di riferimento.
+      </div>
+
+      <!-- TABELLA RIASSUNTIVA -->
+      <h3 style="color:var(--brown);font-family:'Playfair Display',serif;margin-bottom:1rem">📋 Riepilogo trattamenti annuali</h3>
+      <div style="overflow-x:auto;margin-bottom:2.5rem">
+        <table style="width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 8px var(--shadow);border-radius:4px;overflow:hidden">
+          <thead style="background:var(--dark);color:var(--amber-glow)">
+            <tr>
+              <th style="padding:0.8rem 1rem;text-align:left;font-family:'Playfair Display',serif;font-weight:600">Periodo</th>
+              <th style="padding:0.8rem 1rem;text-align:left;font-family:'Playfair Display',serif;font-weight:600">Prodotto</th>
+              <th style="padding:0.8rem 1rem;text-align:left;font-family:'Playfair Display',serif;font-weight:600">Modalità</th>
+              <th style="padding:0.8rem 1rem;text-align:left;font-family:'Playfair Display',serif;font-weight:600">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--cream-dark)">
+              <td style="padding:0.8rem 1rem;color:var(--brown);font-weight:600">🌷 Primavera<br><span style="font-size:0.8rem;color:var(--text-light);font-weight:normal">Marzo–Aprile</span></td>
+              <td style="padding:0.8rem 1rem">🌿 <strong>VarroMed</strong></td>
+              <td style="padding:0.8rem 1rem">Gocciolato interfavo</td>
+              <td style="padding:0.8rem 1rem;color:var(--text-light);font-size:0.88rem">Anche con covata. Senza melari.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--cream-dark);background:var(--amber-pale)">
+              <td style="padding:0.8rem 1rem;color:var(--brown);font-weight:600">☀️ Fine estate<br><span style="font-size:0.8rem;color:var(--text-light);font-weight:normal">Agosto–Settembre</span></td>
+              <td style="padding:0.8rem 1rem">🌿 <strong>VarroMed</strong></td>
+              <td style="padding:0.8rem 1rem">Gocciolato interfavo</td>
+              <td style="padding:0.8rem 1rem;color:var(--text-light);font-size:0.88rem">Dopo l'ultima smielatura. Anche con covata.</td>
+            </tr>
+            <tr>
+              <td style="padding:0.8rem 1rem;color:var(--brown);font-weight:600">❄️ Inverno<br><span style="font-size:0.8rem;color:var(--text-light);font-weight:normal">Dicembre–Gennaio</span></td>
+              <td style="padding:0.8rem 1rem">❄️ <strong>Api-Bioxal</strong> liquido</td>
+              <td style="padding:0.8rem 1rem">Gocciolato</td>
+              <td style="padding:0.8rem 1rem;color:var(--text-light);font-size:0.88rem">Solo in <strong>assenza di covata</strong>. Pronto all'uso.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VARROMED -->
+      <div style="background:white;border:1px solid var(--cream-dark);border-radius:4px;padding:1.5rem 1.8rem;margin-bottom:1.8rem;box-shadow:0 2px 8px var(--shadow)">
+        <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:1.4rem;margin-bottom:0.3rem">🌿 VarroMed</h3>
+        <p style="color:var(--text-light);font-style:italic;margin-bottom:1.2rem;font-size:0.9rem">Acido formico 5 mg/ml + acido ossalico diidrato 44 mg/ml — Beevital GmbH</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.2rem">
+          <div>
+            <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">📅 Quando si usa</h4>
+            <ul style="font-size:0.9rem;line-height:1.7;color:var(--text);padding-left:1.2rem">
+              <li><strong>Primavera</strong> (marzo-aprile)</li>
+              <li><strong>Fine estate / inizio autunno</strong> (agosto-settembre)</li>
+              <li><strong>Inverno</strong> (in assenza di covata, monodose)</li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">✨ Caratteristiche</h4>
+            <ul style="font-size:0.9rem;line-height:1.7;color:var(--text);padding-left:1.2rem">
+              <li>Pronto all'uso (no diluizione)</li>
+              <li>Anche <strong>con covata</strong></li>
+              <li>Apicoltura biologica ✓</li>
+              <li>Tempo sospensione miele: <strong>0 giorni</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">💧 Dosaggio (gocciolato interfavo)</h4>
+        <div style="background:#FDF3DC;border-radius:4px;padding:0.8rem 1rem;font-size:0.9rem;line-height:1.6;color:var(--text);margin-bottom:1rem">
+          <strong>40-60 ml per arnia</strong> in base alla popolosità della famiglia.<br>
+          Una bottiglia da 555 ml ≈ <strong>10 arnie</strong> da 10 favi in piena produzione.<br>
+          Riscaldare a <strong>25-35°C</strong> e agitare prima dell'uso.
+        </div>
+
+        <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">⚠️ Avvertenze</h4>
+        <ul style="font-size:0.88rem;line-height:1.6;color:var(--text-light);padding-left:1.2rem">
+          <li><strong>Non usare</strong> durante il flusso nettarifero o quando è presente il melario</li>
+          <li>Applicare nel <strong>tardo pomeriggio o sera</strong> (bassa attività di volo)</li>
+          <li>Distribuire <strong>uniformemente</strong> sulle api, in particolare nel glomere</li>
+          <li>Può richiedere ripetizione dei trattamenti in presenza di covata</li>
+        </ul>
+
+        <p style="margin-top:1rem;font-size:0.82rem;color:var(--text-light);font-style:italic">📚 <a href="https://www.varromed.it/" target="_blank" rel="noopener" style="color:var(--brown)">Sito ufficiale VarroMed</a> · <a href="https://www.izsvenezie.it/documenti/temi/api/normativa/ministero-salute/2024-04-02-nota-11687-linee-guida-varroatosi.pdf" target="_blank" rel="noopener" style="color:var(--brown)">Linee guida 2024 IZS Venezie (PDF)</a></p>
+      </div>
+
+      <!-- API-BIOXAL -->
+      <div style="background:white;border:1px solid var(--cream-dark);border-radius:4px;padding:1.5rem 1.8rem;margin-bottom:1.8rem;box-shadow:0 2px 8px var(--shadow)">
+        <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:1.4rem;margin-bottom:0.3rem">❄️ Api-Bioxal liquido (con glicerolo)</h3>
+        <p style="color:var(--text-light);font-style:italic;margin-bottom:1.2rem;font-size:0.9rem">Acido ossalico diidrato + glicerolo, soluzione pronta all'uso 500 ml — Chemicals Laif</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.2rem">
+          <div>
+            <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">📅 Quando si usa</h4>
+            <ul style="font-size:0.9rem;line-height:1.7;color:var(--text);padding-left:1.2rem">
+              <li><strong>Inverno</strong> (dicembre-gennaio) — in assenza di covata naturale</li>
+              <li>Estate dopo <strong>blocco di covata</strong> indotto</li>
+              <li>Solo in giornate con <strong>T &gt; 12-13°C</strong> per favorire la veicolazione tra le api</li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">✨ Caratteristiche</h4>
+            <ul style="font-size:0.9rem;line-height:1.7;color:var(--text);padding-left:1.2rem">
+              <li><strong>Pronto all'uso</strong> (no preparazione)</li>
+              <li>Glicerolo al posto dello zucchero</li>
+              <li>Apicoltura biologica ✓</li>
+              <li>Tempo sospensione miele: <strong>0 giorni</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">💧 Dosaggio (gocciolato)</h4>
+        <div style="background:#e3f2fd;border-radius:4px;padding:0.8rem 1rem;font-size:0.9rem;line-height:1.6;color:var(--text);margin-bottom:1rem">
+          <strong>5 ml per favo</strong> coperto di api.<br>
+          Per un'arnia da 10 favi popolati: <strong>50 ml</strong>.<br>
+          Una bottiglia da 500 ml ≈ <strong>10 arnie</strong>.<br>
+          Gocciolare <strong>direttamente nello spazio tra i favi</strong> popolati con siringa o Dosa-Laif.
+        </div>
+
+        <h4 style="color:var(--brown);font-size:0.95rem;margin-bottom:0.5rem">⚠️ Avvertenze</h4>
+        <ul style="font-size:0.88rem;line-height:1.6;color:var(--text-light);padding-left:1.2rem">
+          <li><strong>Solo in assenza di covata</strong> (naturale o indotta da blocco)</li>
+          <li>Singola somministrazione — <strong>non ripetere</strong></li>
+          <li>Trattare <strong>tutte le arnie dell'apiario contemporaneamente</strong> per evitare saccheggio</li>
+          <li>Indossare <strong>guanti e occhiali</strong> protettivi (acido)</li>
+          <li>Se cristallizza, riscaldare a bagnomaria max 40°C</li>
+        </ul>
+
+        <p style="margin-top:1rem;font-size:0.82rem;color:var(--text-light);font-style:italic">📚 <a href="https://www.izsvenezie.it/documenti/temi/api/normativa/ministero-salute/2024-04-02-nota-11687-linee-guida-varroatosi.pdf" target="_blank" rel="noopener" style="color:var(--brown)">Linee guida 2024 IZS Venezie (PDF)</a></p>
+      </div>
+
+      <!-- BLOCCO COVATA -->
+      <div style="background:#FDF3DC;border-left:4px solid var(--amber);border-radius:4px;padding:1.2rem 1.5rem;margin-bottom:2rem">
+        <h4 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:1.1rem;margin-bottom:0.5rem">🔒 Blocco di covata estivo (consigliato)</h4>
+        <p style="font-size:0.9rem;line-height:1.6;color:var(--text);margin-bottom:0.5rem">In molte associazioni apistiche viene consigliato il <strong>blocco di covata</strong> a fine luglio per creare le stesse condizioni di assenza di covata del periodo invernale.</p>
+        <ul style="font-size:0.88rem;line-height:1.6;color:var(--text);padding-left:1.2rem">
+          <li>Si ingabbia la regina per <strong>21 giorni</strong> (kit gabbietta tipo ESSEA-ZEUS)</li>
+          <li>Dopo lo sfarfallamento di tutta la covata si esegue il trattamento con acido ossalico</li>
+          <li>Permette efficacia &gt; 95% del trattamento</li>
+        </ul>
+      </div>
+
+      <!-- BUONE PRATICHE -->
+      <h3 style="color:var(--brown);font-family:'Playfair Display',serif;margin-bottom:1rem">✅ Buone pratiche generali</h3>
+      <div style="background:white;border:1px solid var(--cream-dark);border-radius:4px;padding:1.2rem 1.5rem;font-size:0.9rem;line-height:1.7;box-shadow:0 2px 8px var(--shadow)">
+        <ul style="padding-left:1.2rem;margin:0">
+          <li>Trattare <strong>tutte le arnie dell'apiario</strong> nello stesso periodo</li>
+          <li>Effettuare un <strong>controllo della varroa</strong> (cassetto a rete) prima e dopo il trattamento per misurarne l'efficacia</li>
+          <li>Conservare i farmaci in <strong>luogo fresco e buio</strong>, lontano dai bambini</li>
+          <li>Tenere un <strong>registro dei trattamenti</strong> (data, prodotto, lotto, dosaggio) — obbligatorio per legge in Italia</li>
+          <li>Smaltire le confezioni vuote secondo la normativa locale</li>
+          <li>In caso di dubbi, contattare il <strong>veterinario di riferimento</strong> o l'associazione apistica locale</li>
+        </ul>
+      </div>
+
+    </div><!-- fine utilTabTrattamenti -->
+
+  </section><!-- fine utility -->
+
+  <!-- ===== REGISTRO ===== -->
+  <section class="section" id="registro">
+    <h2 class="section-title">Registro Visite</h2>
+    <p class="section-subtitle">Tieni traccia di ogni ispezione e intervento</p>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="registro-top">
+      <div class="card">
+        <h3>📝 Nuova registrazione</h3>
+        <div class="form-row">
+          <label>Data</label>
+          <input type="date" id="logData">
+        </div>
+        <div class="form-row">
+          <label>Arnia <span style="color:var(--red);font-size:0.8rem">* obbligatoria</span></label>
+          <select id="logArnia"><option value="">— Seleziona arnia —</option></select>
+        </div>
+        <div class="form-row">
+          <label>Tipo di intervento <span style="font-weight:300;font-style:italic;text-transform:none">(anche più di uno)</span></label>
+          <div id="logTipo" style="display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.3rem 0">
+            <label class="tipo-chip"><input type="checkbox" value="ispezione"> 🔍 Ispezione</label>
+            <label class="tipo-chip"><input type="checkbox" value="trattamento"> 💊 Trattamento</label>
+            <label class="tipo-chip"><input type="checkbox" value="nutrizione"> 🍬 Nutrizione</label>
+            <label class="tipo-chip"><input type="checkbox" value="produzione"> 🍯 Raccolta</label>
+            <label class="tipo-chip"><input type="checkbox" value="salute"> ⚕️ Salute</label>
+            <label class="tipo-chip"><input type="checkbox" value="altro"> 📌 Altro</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Note / Osservazioni</label>
+          <textarea id="logNote" placeholder="Es. regina vista, covata regolare, 3 kg di miele raccolti..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Varroa (cadute/giorno)</label>
+          <input type="number" id="logVarroa" min="0" placeholder="—">
+        </div>
+
+        <!-- SEZIONE TRATTAMENTO -->
+        <div id="trattamentoFields" style="display:none;border:1px solid #C8C0E0;border-radius:4px;padding:1rem;background:#f4f1fa;margin-bottom:1rem">
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#5e4a8a;margin-bottom:0.8rem;font-weight:600">💊 Dettagli trattamento</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+            <div class="form-row">
+              <label>Prodotto</label>
+              <select id="trattProdotto">
+                <option value="">— Seleziona —</option>
+                <option value="varromed">🌿 VarroMed</option>
+                <option value="apibioxal">❄️ Api-Bioxal</option>
+                <option value="altro">📌 Altro</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Dosaggio / Quantità</label>
+              <input type="text" id="trattDosaggio" placeholder="Es. 50 ml per arnia">
+            </div>
+          </div>
+          <div style="font-size:0.8rem;color:#5e4a8a;margin-top:0.3rem;font-style:italic">📚 Per modalità d'uso, momenti e dosi vedi <a href="#" onclick="goToTrattamenti(event)" style="color:#5e4a8a;text-decoration:underline">Utility → Trattamenti</a></div>
+        </div>
+
+        <!-- SEZIONE RACCOLTA -->
+        <div id="raccoltaFields" style="display:none;border:1px solid #9FC9B0;border-radius:4px;padding:1rem;background:#e8f5e9;margin-bottom:1rem">
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--green);margin-bottom:0.8rem;font-weight:600;display:flex;justify-content:space-between;align-items:center">
+            🍯 Prodotti raccolti
+            <button type="button" onclick="addRaccoltaRiga()" class="btn btn-secondary" style="padding:0.3rem 0.7rem;font-size:0.82rem">+ Aggiungi prodotto</button>
+          </div>
+          <div id="raccoltaRighe"></div>
+          <div style="font-size:0.8rem;color:var(--green);margin-top:0.5rem;font-style:italic">I prodotti verranno automaticamente caricati a magazzino al salvataggio.</div>
+        </div>
+        <!-- SEZIONE ISPEZIONE -->
+        <div id="ispezioneFields" style="display:none;border:1px solid var(--amber-light);border-radius:4px;padding:1rem;background:var(--amber-pale);margin-bottom:1rem">
+          <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--brown);margin-bottom:0.8rem;font-weight:600">🔍 Dettagli ispezione</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem;margin-bottom:1rem">
+            <div class="form-row">
+              <label>Covata</label>
+              <select id="ispCovata">
+                <option value="">—</option>
+                <option value="1">1 — Scarsa</option>
+                <option value="2">2 — Rada</option>
+                <option value="3">3 — Discreta</option>
+                <option value="4">4 — Buona</option>
+                <option value="5">5 — Ottima</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Scorte</label>
+              <select id="ispScorte">
+                <option value="">—</option>
+                <option value="1">1 — Scarse</option>
+                <option value="2">2 — Limitate</option>
+                <option value="3">3 — Sufficienti</option>
+                <option value="4">4 — Buone</option>
+                <option value="5">5 — Abbondanti</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Celle reali</label>
+              <select id="ispCelleReali">
+                <option value="">—</option>
+                <option value="0">0 — Nessuna</option>
+                <option value="1">1 — 1-2</option>
+                <option value="2">2 — 3-5</option>
+                <option value="3">3 — 6-10</option>
+                <option value="4">4 — 11-20</option>
+                <option value="5">5 — Oltre 20</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Telaini su cui si sviluppa la famiglia</label>
+            <select id="ispTelaini" onchange="renderTelainiMapForm()">
+              <option value="">—</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+          <div id="telainiMapForm"></div>
+        </div>
+        <button class="btn" onclick="addLogEntry()">Salva registrazione</button>
+      </div>
+      <div class="card">
+        <h3>📊 Riepilogo rapido</h3>
+        <div id="quickStats" style="font-size:0.95rem;color:var(--text-light);line-height:2"></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="log-filters">
+      <input type="text" id="filterSearch" placeholder="🔍 Cerca nelle note..." oninput="renderLog()" style="flex:1;min-width:160px">
+      <select id="filterTipo" onchange="renderLog()">
+        <option value="">Tutti i tipi</option>
+        <option value="ispezione">Ispezione</option>
+        <option value="trattamento">Trattamento</option>
+        <option value="nutrizione">Nutrizione</option>
+        <option value="produzione">Produzione</option>
+        <option value="salute">Salute</option>
+        <option value="altro">Altro</option>
+      </select>
+      <select id="filterArnia" onchange="renderLog()">
+        <option value="">Tutte le arnie</option>
+      </select>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇ Esporta CSV</button>
+    </div>
+    <div class="log-entries" id="logEntries"></div>
+  </section>
+
+  <!-- ===== ARNIE ===== -->
+  <section class="section" id="arnie">
+    <h2 class="section-title">Le Mie Arnie</h2>
+    <p class="section-subtitle">Gestisci il censimento del tuo apiario</p>
+    <div style="display:flex;gap:0.8rem;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn" onclick="openArniModal()">+ Aggiungi Arnia</button>
+    </div>
+    <div class="arnie-grid" id="arnieGrid"></div>
+  </section>
+
+  <!-- ===== MAGAZZINO ===== -->
+  <section class="section" id="magazzino">
+    <h2 class="section-title">Magazzino</h2>
+    <p class="section-subtitle">Scorte, materiale apistico e prodotto finito</p>
+    <div class="mag-tabs">
+      <button class="mag-tab active" onclick="showMagTab('articoli', this)">📋 Articoli</button>
+      <button class="mag-tab" onclick="showMagTab('movimentazioni', this)">🔄 Movimentazioni</button>
+      <button class="mag-tab" onclick="showMagTab('controlli', this)">🔍 Controlli</button>
+    </div>
+    <div id="magTabArticoli">
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="openArticoloModal()">+ Nuovo articolo</button>
+        <select id="magFiltroCategoria" onchange="renderMagArticoli()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutte le categorie</option>
+          <option value="materiale">🔧 Materiale apistico</option>
+          <option value="consumabile">💊 Consumabili</option>
+          <option value="prodotto">🍯 Prodotto finito</option>
+        </select>
+        <input type="text" id="magFiltroSearch" placeholder="🔍 Cerca articolo..." oninput="renderMagArticoli()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;flex:1;min-width:140px">
+      </div>
+      <div class="mag-grid" id="magGrid"></div>
+    </div>
+    <div id="magTabMovimentazioni" style="display:none">
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="openMovModal()">+ Nuova movimentazione</button>
+        <select id="magFiltroMov" onchange="renderMagMovimentazioni()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti i tipi</option>
+          <option value="entrata">➕ Entrate</option>
+          <option value="uscita">➖ Uscite</option>
+          <option value="rettifica">🔧 Rettifiche</option>
+        </select>
+        <select id="magFiltroMovArticolo" onchange="renderMagMovimentazioni()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti gli articoli</option>
+        </select>
+      </div>
+      <div class="mov-list" id="movList"></div>
+    </div>
+
+    <!-- TAB CONTROLLI -->
+    <div id="magTabControlli" style="display:none">
+      <div style="margin-bottom:1.2rem">
+        <p style="color:var(--text-light);font-size:0.95rem;font-style:italic;margin-bottom:1rem">Strumenti per mantenere il magazzino pulito e senza duplicati.</p>
+        <button class="btn" onclick="runControlli()">🔍 Analizza duplicati</button>
+      </div>
+      <div id="controlliResult"></div>
+    </div>
+  </section>
+
+  <!-- ===== OBIETTIVI ===== -->
+  <section class="section" id="obiettivi">
+    <h2 class="section-title">Obiettivi</h2>
+    <p class="section-subtitle">Pianifica e monitora i tuoi traguardi stagionali e annuali</p>
+
+    <div class="mag-tabs">
+      <button class="mag-tab active" onclick="showObTab('stagionali', this)">🌿 Stagionali</button>
+      <button class="mag-tab" onclick="showObTab('annuali', this)">📆 Annuali</button>
+      <button class="mag-tab" onclick="showObTab('storico', this)">📊 Storico</button>
+    </div>
+
+    <!-- TAB STAGIONALI -->
+    <div id="obTabStagionali">
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="openObModal('stagionale')">+ Nuovo obiettivo</button>
+        <select id="obFiltroStagione" onchange="renderObStagionali()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutte le stagioni</option>
+          <option value="primavera">🌿 Primavera</option>
+          <option value="estate">☀️ Estate</option>
+          <option value="autunno">🍂 Autunno</option>
+          <option value="inverno">🌨️ Inverno</option>
+        </select>
+        <select id="obFiltroAnnoS" onchange="renderObStagionali()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti gli anni</option>
+        </select>
+        <select id="obFiltroStato" onchange="renderObStagionali()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti gli stati</option>
+          <option value="da_fare">🔲 Da fare</option>
+          <option value="in_corso">🔄 In corso</option>
+          <option value="completato">✅ Completato</option>
+        </select>
+      </div>
+      <div id="obStagionaliList"></div>
+    </div>
+
+    <!-- TAB ANNUALI -->
+    <div id="obTabAnnuali" style="display:none">
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="openObModal('annuale')">+ Nuovo obiettivo</button>
+        <select id="obFiltroAnnoA" onchange="renderObAnnuali()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti gli anni</option>
+        </select>
+      </div>
+      <div id="obAnnualiList"></div>
+    </div>
+
+    <!-- TAB STORICO -->
+    <div id="obTabStorico" style="display:none">
+      <div id="obStorico"></div>
+    </div>
+  </section>
+
+  <!-- ===== CONTABILITÀ ===== -->
+  <section class="section" id="contabilita">
+    <h2 class="section-title">Contabilità</h2>
+    <p class="section-subtitle">Entrate, uscite e bilancio dell'apiario</p>
+    <div class="mag-tabs">
+      <button class="mag-tab active" onclick="showContTab('riepilogo', this)">📊 Riepilogo</button>
+      <button class="mag-tab" onclick="showContTab('movimenti', this)">💸 Movimenti</button>
+    </div>
+    <!-- TAB RIEPILOGO -->
+    <div id="contTabRiepilogo">
+      <div id="contKpiGrid" class="cont-kpi-grid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
+        <div class="cont-chart-wrap">
+          <div class="cont-chart-title">📅 Anno corrente — per mese</div>
+          <div class="bar-chart" id="chartMensile"></div>
+        </div>
+        <div class="cont-chart-wrap">
+          <div class="cont-chart-title">📆 Confronto annate</div>
+          <div class="bar-chart" id="chartAnnate"></div>
+        </div>
+      </div>
+      <div class="cont-chart-wrap">
+        <div class="cont-chart-title">🏷️ Ultime movimentazioni</div>
+        <div id="contUltime"></div>
+      </div>
+    </div>
+    <!-- TAB MOVIMENTI -->
+    <div id="contTabMovimenti" style="display:none">
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="openContMovModal()">+ Nuovo movimento</button>
+        <select id="contFiltroTipo" onchange="renderContMovimenti()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti i tipi</option>
+          <option value="entrata">🟢 Entrate</option>
+          <option value="uscita">🔴 Uscite</option>
+        </select>
+        <select id="contFiltroAnno" onchange="renderContMovimenti()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;color:var(--text)">
+          <option value="">Tutti gli anni</option>
+        </select>
+        <input type="text" id="contFiltroSearch" placeholder="🔍 Cerca..." oninput="renderContMovimenti()" style="padding:0.45rem 0.8rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:white;flex:1;min-width:120px">
+      </div>
+      <div id="contMovList"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL OBIETTIVO -->
+<div class="modal-overlay" id="obModal">
+  <div class="modal" style="max-width:500px">
+    <h3 id="obModalTitle">🎯 Nuovo obiettivo</h3>
+    <input type="hidden" id="editObId">
+    <input type="hidden" id="obTipoHidden">
+
+    <div class="form-row">
+      <label>Titolo</label>
+      <input type="text" id="obTitolo" placeholder="Es. Primo controllo sanitario...">
+    </div>
+    <div class="form-row">
+      <label>Descrizione</label>
+      <textarea id="obDescrizione" placeholder="Dettagli, cosa fare, criteri di completamento..."></textarea>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Anno</label>
+        <select id="obAnno"></select>
+      </div>
+      <div class="form-row" id="obStagioneRow">
+        <label>Stagione</label>
+        <select id="obStagione">
+          <option value="primavera">🌿 Primavera</option>
+          <option value="estate">☀️ Estate</option>
+          <option value="autunno">🍂 Autunno</option>
+          <option value="inverno">🌨️ Inverno</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Stato</label>
+      <select id="obStato">
+        <option value="da_fare">🔲 Da fare</option>
+        <option value="in_corso">🔄 In corso</option>
+        <option value="completato">✅ Completato</option>
+      </select>
+    </div>
+
+    <!-- Solo per annuali -->
+    <div id="obAnnualeFields" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem">
+        <div class="form-row">
+          <label>Target</label>
+          <input type="number" id="obTarget" min="0" step="0.1" placeholder="Es. 50">
+        </div>
+        <div class="form-row">
+          <label>Attuale</label>
+          <input type="number" id="obAttuale" min="0" step="0.1" placeholder="Es. 32">
+        </div>
+        <div class="form-row">
+          <label>Unità</label>
+          <input type="text" id="obUnita" placeholder="kg, pz, €...">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Arnia associata (opzionale)</label>
+      <select id="obArnia">
+        <option value="">— Nessuna arnia specifica —</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Note</label>
+      <input type="text" id="obNote" placeholder="Note aggiuntive...">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeObModal()">Annulla</button>
+      <button class="btn" onclick="saveObiettivo()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OBIETTIVO -->
+<div class="modal-overlay" id="contMovModal">
+  <div class="modal" style="max-width:500px">
+    <h3 id="contMovModalTitle">💰 Nuovo movimento</h3>
+    <input type="hidden" id="editContMovId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Data</label>
+        <input type="date" id="contMovData">
+      </div>
+      <div class="form-row">
+        <label>Tipo</label>
+        <select id="contMovTipo" onchange="renderCatChips()">
+          <option value="entrata">🟢 Entrata</option>
+          <option value="uscita">🔴 Uscita</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Descrizione</label>
+      <input type="text" id="contMovDesc" placeholder="Es. Vendita 20 vasi acacia fiera...">
+    </div>
+    <div class="form-row">
+      <label>Importo (€)</label>
+      <input type="number" id="contMovImporto" min="0" step="0.01" placeholder="Es. 150.00">
+    </div>
+    <div class="form-row">
+      <label>Categorie <span style="font-weight:300;font-style:italic;text-transform:none">(anche più di una)</span></label>
+      <div id="contCatChips" style="display:flex;flex-wrap:wrap;padding:0.3rem 0"></div>
+    </div>
+    <div class="form-row">
+      <label>Note</label>
+      <input type="text" id="contMovNote" placeholder="Es. cliente, fornitore...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeContMovModal()">Annulla</button>
+      <button class="btn" onclick="saveContMov()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ARTICOLO -->
+<div class="modal-overlay" id="articoloModal">
+  <div class="modal" style="max-width:480px">
+    <h3 id="articoloModalTitle">📦 Nuovo articolo</h3>
+    <input type="hidden" id="editArticoloId">
+    <div class="form-row">
+      <label>Nome articolo</label>
+      <input type="text" id="artNome" placeholder="Es. Telaini nido, Acido ossalico...">
+      <div id="artSimili"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Categoria</label>
+        <select id="artCategoria">
+          <option value="materiale">🔧 Materiale apistico</option>
+          <option value="consumabile">💊 Consumabile / Farmaco</option>
+          <option value="prodotto">🍯 Prodotto finito</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Unità di misura</label>
+        <select id="artUnita">
+          <option value="pz">pz (pezzi)</option>
+          <option value="kg">kg</option>
+          <option value="g">g (grammi)</option>
+          <option value="l">l (litri)</option>
+          <option value="ml">ml</option>
+          <option value="vasi">vasi</option>
+          <option value="dosi">dosi</option>
+          <option value="strips">strips</option>
+          <option value="fogli">fogli</option>
+          <option value="sacchi">sacchi</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem" id="artCampiConsumabile">
+      <div class="form-row">
+        <label>Scadenza (mese/anno)</label>
+        <input type="month" id="artScadenza">
+      </div>
+      <div class="form-row">
+        <label>Lotto</label>
+        <input type="text" id="artLotto" placeholder="Es. AB123">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Soglia minima scorta (avviso)</label>
+      <input type="number" id="artSoglia" min="0" placeholder="Es. 10 — lascia vuoto per disabilitare">
+    </div>
+    <div class="form-row">
+      <label>Note</label>
+      <input type="text" id="artNote" placeholder="Es. Langstroth, fornitore, ecc.">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeArticoloModal()">Annulla</button>
+      <button class="btn" onclick="saveArticolo()">Salva articolo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOVIMENTAZIONE -->
+<div class="modal-overlay" id="movModal">
+  <div class="modal" style="max-width:520px">
+    <h3 id="movModalTitle">🔄 Nuova movimentazione</h3>
+    <input type="hidden" id="editMovId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Data</label>
+        <input type="date" id="movData">
+      </div>
+      <div class="form-row">
+        <label>Tipo</label>
+        <select id="movTipo">
+          <option value="entrata">➕ Entrata</option>
+          <option value="uscita">➖ Uscita</option>
+          <option value="rettifica">🔧 Rettifica</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:0.8rem">
+      <div style="font-size:0.85rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem;display:flex;justify-content:space-between;align-items:center">
+        Articoli
+        <button type="button" onclick="addMovRiga()" class="btn btn-secondary" style="padding:0.25rem 0.7rem;font-size:0.82rem">+ Aggiungi articolo</button>
+      </div>
+      <div id="movRighe"></div>
+    </div>
+    <div class="form-row">
+      <label>Note</label>
+      <input type="text" id="movNote" placeholder="Es. acquisto Nicot, vendita fiera...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeMovModal()">Annulla</button>
+      <button class="btn" onclick="saveMov()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ARNIA -->
+<div class="modal-overlay" id="arniModal">
+  <div class="modal" style="max-width:600px">
+    <h3 id="arniModalTitle">🏠 Nuova Arnia</h3>
+    <input type="hidden" id="editArniId">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Numero / Codice</label>
+        <input type="text" id="arniNum" placeholder="Es. A1, 07, Nord...">
+      </div>
+      <div class="form-row">
+        <label>Nome (opzionale)</label>
+        <input type="text" id="arniNome" placeholder="Es. Regina Primavera">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Stato famiglia</label>
+        <select id="arniStatus">
+          <option value="attiva">✅ Attiva e forte</option>
+          <option value="debole">⚠️ Debole</option>
+          <option value="problema">❌ Problema</option>
+          <option value="invernata">❄️ Invernata</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Anno introduzione regina</label>
+        <input type="number" id="arniReginaAnno" placeholder="Es. 2023" min="2000" max="2099">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-row">
+        <label>Anno introduzione arnia</label>
+        <input type="number" id="arniAnnoIntroduzione" placeholder="Es. 2022" min="2000" max="2099">
+      </div>
+      <div class="form-row">
+        <label>Anno dismissione (se non più attiva)</label>
+        <input type="number" id="arniAnnoDismissione" placeholder="— Ancora attiva —" min="2000" max="2099">
+      </div>
+    </div>
+
+    <!-- RAZZA API -->
+    <div style="border:1px solid var(--cream-dark);border-radius:4px;padding:1rem;margin-bottom:1rem;background:var(--amber-pale)">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);margin-bottom:0.8rem;display:flex;align-items:center;gap:0.4rem">🐝 Razza delle api</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+        <div class="form-row">
+          <label>Razza principale</label>
+          <select id="arniRazza">
+            <option value="">— Non specificata —</option>
+            <option value="Ligustica">Apis mellifera ligustica (Italiana)</option>
+            <option value="Carnica">Apis mellifera carnica (Carnica)</option>
+            <option value="Caucasica">Apis mellifera caucasica (Caucasica)</option>
+            <option value="Sicula">Apis mellifera sicula (Sicula)</option>
+            <option value="Buckfast">Buckfast</option>
+            <option value="Mellifera">Apis mellifera mellifera (Nera)</option>
+            <option value="Ibrida">Ibrida / Meticcia</option>
+            <option value="Altro">Altra razza</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Origine / Provenienza</label>
+          <input type="text" id="arniRazzaOrigine" placeholder="Es. Allevamento Rossi...">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem">
+        <div class="form-row">
+          <label>Temperamento</label>
+          <select id="arniTemperamento">
+            <option value="">—</option>
+            <option value="Molto docile">😊 Molto docile</option>
+            <option value="Docile">🙂 Docile</option>
+            <option value="Normale">😐 Normale</option>
+            <option value="Nervosa">😤 Nervosa</option>
+            <option value="Aggressiva">😡 Aggressiva</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Tendenza sciamatura</label>
+          <select id="arniSciamatura">
+            <option value="">—</option>
+            <option value="Bassa">🟢 Bassa</option>
+            <option value="Media">🟡 Media</option>
+            <option value="Alta">🔴 Alta</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Produttività stimata</label>
+          <select id="arniProduttivita">
+            <option value="">—</option>
+            <option value="Alta">⭐⭐⭐ Alta</option>
+            <option value="Media">⭐⭐ Media</option>
+            <option value="Bassa">⭐ Bassa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Note sulla razza</label>
+        <input type="text" id="arniRazzaNote" placeholder="Es. buona raccolta su acacia, ottima svernata...">
+      </div>
+    </div>
+
+    <!-- MELARI -->
+    <div style="border:1px solid var(--cream-dark);border-radius:4px;padding:1rem;margin-bottom:1rem">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);margin-bottom:0.8rem;display:flex;align-items:center;gap:0.4rem">🍯 Melari</div>
+      <div class="melario-list" id="melariList"></div>
+      <div class="add-melario-row" style="margin-top:0.8rem">
+        <div class="form-row" style="margin:0">
+          <label>N° telaini</label>
+          <input type="number" id="melNum" min="1" max="12" placeholder="Es. 10" style="width:100%;padding:0.5rem 0.7rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:var(--cream)">
+        </div>
+        <div class="form-row" style="margin:0">
+          <label>Data posizion.</label>
+          <input type="date" id="melData" style="width:100%;padding:0.5rem 0.7rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:var(--cream)">
+        </div>
+        <div class="form-row" style="margin:0">
+          <label>Stato</label>
+          <select id="melStatus" style="width:100%;padding:0.5rem 0.7rem;border:1px solid var(--cream-dark);border-radius:3px;font-family:'Crimson Pro',serif;font-size:0.95rem;background:var(--cream)">
+            <option value="posizionato">In produzione</option>
+            <option value="rimosso">Rimosso</option>
+            <option value="produzione">Smielato</option>
+          </select>
+        </div>
+        <button class="btn" style="padding:0.5rem 0.9rem;font-size:0.9rem;align-self:flex-end" onclick="addMelario()">+ Aggiungi</button>
+      </div>
+      <div class="form-row" style="margin-top:0.5rem">
+        <label>Note melari</label>
+        <input type="text" id="melNote" placeholder="Es. acacia, 8 telaini opercolati...">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Note generali</label>
+      <textarea id="arniNote" placeholder="Posizione nell'apiario, caratteristiche particolari..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeArniModal()">Annulla</button>
+      <button class="btn" onclick="saveArnia()">Salva arnia</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailTitle">Arnia</h3>
+    <button class="btn-icon" onclick="closeDetail()" style="color:var(--cream-dark);font-size:1.2rem;border-color:rgba(255,255,255,0.2)">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody"></div>
+</div>
+<div id="detailOverlay" onclick="closeDetail()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:199"></div>
+
+</div><!-- fine appContent -->
+
+<!-- ===== JS MODULES — ordine importante! ===== -->
+<script src="js/state.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/import-export.js"></script>
+<script src="js/registro.js"></script>
+<script src="js/arnie.js"></script>
+<script src="js/magazzino.js"></script>
+<script src="js/contabilita.js"></script>
+<script src="js/obiettivi.js"></script>
+<script src="js/sciroppo.js"></script>
+<script src="js/home.js"></script>
+<script src="js/drive-app.js"></script>
+
+</body>
+</html>
