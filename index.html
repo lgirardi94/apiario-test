@@ -86,14 +86,20 @@
     <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.6rem">Stato arnie — ultima ispezione</div>
     <div class="arnie-grid" id="homeArnieGrid" style="margin-bottom:1.2rem"></div>
 
-    <!-- VISITE + OBIETTIVI -->
+   <!-- VISITE + OBIETTIVI -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem">
       <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Ultime visite</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+          <span style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em">Ultime visite</span>
+          <a href="#" onclick="navigateTo('registro');return false" style="font-size:0.75rem;color:var(--amber);text-decoration:none;font-weight:600">Vedi tutte ↗</a>
+        </div>
         <div id="homeUltimeVisite"></div>
       </div>
       <div class="card" style="padding:1rem">
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem">Obiettivi in corso</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+          <span style="font-size:0.75rem;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em">Obiettivi in corso</span>
+          <a href="#" onclick="navigateTo('obiettivi');return false" style="font-size:0.75rem;color:var(--amber);text-decoration:none;font-weight:600">Vedi tutti ↗</a>
+        </div>
         <div id="homeObiettivi"></div>
       </div>
     </div>
